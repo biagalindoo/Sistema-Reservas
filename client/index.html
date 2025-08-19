@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReservaFácil - Sistema de Reservas de Restaurantes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="./styles/main.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Notification System -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Mobile Menu Overlay com nova classe e estrutura -->
+    <div id="mobile-overlay" class="mobile-overlay md:hidden"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar w-64 bg-white shadow-lg fixed left-0 top-0 h-full z-60 md:translate-x-0">
+        <div class="p-6 border-b h-[100px]">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-utensils text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800">ReservaFácil</h1>
+                    <p class="text-sm text-gray-500">Gestão de Reservas</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="p-4">
+            <ul class="space-y-2">
+                <li>
+                    <button onclick="showPage('dashboard')" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-chart-dashboard text-gray-600"></i>
+                        <span class="text-gray-700">Dashboard</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showPage('restaurants')" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-store text-gray-600"></i>
+                        <span class="text-gray-700">Restaurantes</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showPage('reservations')" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-calendar-check text-gray-600"></i>
+                        <span class="text-gray-700">Reservas</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showPage('calendar')" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-calendar text-gray-600"></i>
+                        <span class="text-gray-700">Calendário</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showPage('analytics')" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-chart-line text-gray-600"></i>
+                        <span class="text-gray-700">Relatórios</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showPage('customers')" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-users text-gray-600"></i>
+                        <span class="text-gray-700">Clientes</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="md:ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b h-[100px]">
+            <div class="p-4 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button id="sidebar-toggle" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
+                            <i class="fas fa-bars text-gray-600"></i>
+                        </button>
+                        <div>
+                            <h2 id="page-title" class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                            <p id="page-subtitle" class="text-sm text-gray-500">Visão geral do sistema</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input type="text" placeholder="Buscar..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <button class="p-2 rounded-lg hover:bg-gray-100 relative">
+                            <i class="fas fa-bell text-gray-600"></i>
+                            <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                        </button>
+                        <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="p-6">
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stats-card rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-100 text-sm">Total de Reservas</p>
+                                <p class="text-3xl font-bold text-white" id="total-reservations">0</p>
+                            </div>
+                            <i class="fas fa-calendar-check text-purple-200 text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Reservas Hoje</p>
+                                <p class="text-3xl font-bold text-gray-800" id="today-reservations">0</p>
+                            </div>
+                            <i class="fas fa-clock text-blue-500 text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Restaurantes</p>
+                                <p class="text-3xl font-bold text-gray-800" id="total-restaurants">0</p>
+                            </div>
+                            <i class="fas fa-store text-green-500 text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Taxa de Ocupação</p>
+                                <p class="text-3xl font-bold text-gray-800">85%</p>
+                            </div>
+                            <i class="fas fa-chart-pie text-orange-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos com container adequado para z-index -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Reservas por Mês</h3>
+                        <div class="chart-container h-64">
+                            <canvas id="reservationsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Restaurantes Mais Populares</h3>
+                        <div class="chart-container h-64">
+                            <canvas id="restaurantsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Reservations -->
+                <div class="bg-white rounded-xl shadow-sm">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-800">Reservas Recentes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Restaurante</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horário</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-reservations" class="divide-y divide-gray-200">
+                                <!-- Reservas serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restaurants Page -->
+            <div id="restaurants-page" class="page hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800">Gerenciar Restaurantes</h3>
+                        <p class="text-gray-500">Adicione e gerencie os restaurantes do sistema</p>
+                    </div>
+                    <button onclick="openRestaurantModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Novo Restaurante
+                    </button>
+                </div>
+
+                <div id="restaurants-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Restaurantes serão inseridos aqui -->
+                </div>
+            </div>
+
+            <!-- Reservations Page -->
+            <div id="reservations-page" class="page hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800">Gerenciar Reservas</h3>
+                        <p class="text-gray-500">Visualize e gerencie todas as reservas</p>
+                    </div>
+                    <button onclick="openReservationModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Nova Reserva
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Restaurante</label>
+                            <select id="filter-restaurant" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Todos os restaurantes</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="filter-status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Todos os status</option>
+                                <option value="confirmada">Confirmada</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="cancelada">Cancelada</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                            <input type="date" id="filter-date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="clearFilters()" class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                                Limpar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reservations Table -->
+                <div class="bg-white rounded-xl shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Restaurante</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horário</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pessoas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservations-table" class="divide-y divide-gray-200">
+                                <!-- Reservas serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Page -->
+            <div id="calendar-page" class="page hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800">Calendário de Reservas</h3>
+                        <p class="text-gray-500">Visualize as reservas em formato de calendário</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <select id="calendar-restaurant-filter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Todos os restaurantes</option>
+                        </select>
+                        <button onclick="openReservationModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Nova Reserva
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <button onclick="previousMonth()" class="p-2 rounded-lg hover:bg-gray-100">
+                            <i class="fas fa-chevron-left text-gray-600"></i>
+                        </button>
+                        <h4 id="calendar-month-year" class="text-xl font-semibold text-gray-800"></h4>
+                        <button onclick="nextMonth()" class="p-2 rounded-lg hover:bg-gray-100">
+                            <i class="fas fa-chevron-right text-gray-600"></i>
+                        </button>
+                    </div>
+
+                    <div class="calendar-grid mb-4">
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Dom</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Seg</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Ter</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Qua</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Qui</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Sex</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Sáb</div>
+                    </div>
+
+                    <div id="calendar-days" class="calendar-grid">
+                        <!-- Dias do calendário serão inseridos aqui -->
+                    </div>
+                    
+                    <!-- Adicionando seção para mostrar reservas do dia selecionado -->
+                    <div id="selected-day-reservations" class="mt-6 hidden">
+                        <h5 class="text-lg font-semibold text-gray-800 mb-4">Reservas do dia <span id="selected-date"></span></h5>
+                        <div id="day-reservations-list" class="space-y-3">
+                            <!-- Reservas do dia serão inseridas aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analytics-page" class="page hidden">
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800">Relatórios e Análises</h3>
+                    <p class="text-gray-500">Visualize métricas detalhadas do seu negócio</p>
+                </div>
+
+                <!-- Gráficos de analytics com container adequado -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Taxa de Ocupação por Dia da Semana</h4>
+                        <div class="chart-container h-64">
+                            <canvas id="occupancyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Horários Mais Populares</h4>
+                        <div class="chart-container h-64">
+                            <canvas id="timesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Receita Estimada</p>
+                                <p class="text-2xl font-bold text-gray-800">R$ 45.230</p>
+                                <p class="text-green-500 text-sm">+12% este mês</p>
+                            </div>
+                            <i class="fas fa-dollar-sign text-green-500 text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Clientes Únicos</p>
+                                <p class="text-2xl font-bold text-gray-800">1.234</p>
+                                <p class="text-blue-500 text-sm">+8% este mês</p>
+                            </div>
+                            <i class="fas fa-users text-blue-500 text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Avaliação Média</p>
+                                <p class="text-2xl font-bold text-gray-800">4.8</p>
+                                <p class="text-yellow-500 text-sm">★★★★★</p>
+                            </div>
+                            <i class="fas fa-star text-yellow-500 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Page -->
+            <div id="customers-page" class="page hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800">Gerenciar Clientes</h3>
+                        <p class="text-gray-500">Visualize e gerencie informações dos clientes</p>
+                    </div>
+                    <div>
+                        <button onclick="openCustomerModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Novo Cliente
+                        </button>
+                        <button onclick="exportCustomers()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Exportar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reservas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-table" class="divide-y divide-gray-200">
+                                <!-- Clientes serão inseridos aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Restaurant Modal -->
+    <div id="restaurant-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Novo Restaurante</h3>
+                <button onclick="closeRestaurantModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="restaurant-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Restaurante</label>
+                        <input type="text" id="restaurant-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                        <input type="text" id="restaurant-address" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <input type="tel" id="restaurant-phone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Capacidade</label>
+                        <input type="number" id="restaurant-capacity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                        <textarea id="restaurant-description" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeRestaurantModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reservation Modal -->
+    <div id="reservation-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <!-- Melhorando layout do modal com grid de 2 colunas e campos mais largos -->
+        <div class="bg-white rounded-xl max-w-4xl w-full p-8 overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-800">Nova Reserva</h3>
+                <button onclick="closeReservationModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="reservation-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Cliente</label>
+                        <input type="text" id="customer-name" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="customer-email" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <input type="tel" id="customer-phone" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Restaurante</label>
+                        <select id="reservation-restaurant" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                            <option value="">Selecione um restaurante</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                        <input type="date" id="reservation-date" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Número de Pessoas</label>
+                        <input type="number" id="party-size" min="1" max="20" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                        <div id="time-slots" class="grid grid-cols-3 md:grid-cols-6 gap-2">
+                            <!-- Time slots serão inseridos aqui -->
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="reservation-notes" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 mt-8">
+                    <button type="button" onclick="closeReservationModal()" class="px-6 py-3 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors">Confirmar Reserva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Novo Cliente</h3>
+                <button onclick="closeCustomerModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="customer-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
+                        <input type="text" id="new-customer-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="new-customer-email" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <input type="tel" id="new-customer-phone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">Salvar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button onclick="openReservationModal()" class="floating-action bg-purple-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center">
+        <i class="fas fa-plus text-xl"></i>
+    </button>
+
+    <script src="./main.js"></script>
+</body>
+</html>
