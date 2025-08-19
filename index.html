@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -123,11 +122,35 @@
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
-                z-index: 50;
+                z-index: 60;
                 height: 100vh;
                 background: white;
                 box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             }
+        }
+        
+        /* Ajustado z-index do overlay para não interferir com gráficos */
+        .mobile-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .mobile-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        
+        /* Garantir que gráficos tenham z-index adequado */
+        .chart-container {
+            position: relative;
+            z-index: 1;
         }
         
         .notification {
@@ -200,12 +223,12 @@
     <!-- Notification System -->
     <div id="notification" class="notification"></div>
 
-    <!-- Mobile Menu Overlay -->
-    <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+    <!-- Mobile Menu Overlay com nova classe e estrutura -->
+    <div id="mobile-overlay" class="mobile-overlay md:hidden"></div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="sidebar w-64 bg-white shadow-lg fixed left-0 top-0 h-full z-50 md:relative md:translate-x-0">
-        <div class="p-6 border-b">
+    <div id="sidebar" class="sidebar w-64 bg-white shadow-lg fixed left-0 top-0 h-full z-60 md:translate-x-0">
+        <div class="p-6 border-b h-[100px]">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
                     <i class="fas fa-utensils text-white"></i>
@@ -262,7 +285,7 @@
     <!-- Main Content -->
     <div class="md:ml-64 min-h-screen">
         <!-- Header -->
-        <header class="bg-white shadow-sm border-b">
+        <header class="bg-white shadow-sm border-b h-[100px]">
             <div class="px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
@@ -299,56 +322,77 @@
                     <div class="stats-card rounded-xl p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-white text-opacity-80 text-sm">Total Restaurantes</p>
-                                <p class="text-2xl font-bold text-white" id="total-restaurants-stat">0</p>
+                                <p class="text-purple-100 text-sm">Total de Reservas</p>
+                                <p class="text-3xl font-bold text-white" id="total-reservations">0</p>
                             </div>
-                            <i class="fas fa-store text-white text-opacity-60 text-2xl"></i>
+                            <i class="fas fa-calendar-check text-purple-200 text-2xl"></i>
                         </div>
                     </div>
-                    <div class="bg-white rounded-xl p-6 border">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-gray-500 text-sm">Reservas Hoje</p>
-                                <p class="text-2xl font-bold text-gray-800" id="today-reservations-stat">0</p>
+                                <p class="text-3xl font-bold text-gray-800" id="today-reservations">0</p>
                             </div>
-                            <i class="fas fa-calendar-day text-purple-500 text-2xl"></i>
+                            <i class="fas fa-clock text-blue-500 text-2xl"></i>
                         </div>
                     </div>
-                    <div class="bg-white rounded-xl p-6 border">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">Total Reservas</p>
-                                <p class="text-2xl font-bold text-gray-800" id="total-reservations-stat">0</p>
+                                <p class="text-gray-500 text-sm">Restaurantes</p>
+                                <p class="text-3xl font-bold text-gray-800" id="total-restaurants">0</p>
                             </div>
-                            <i class="fas fa-calendar-check text-green-500 text-2xl"></i>
+                            <i class="fas fa-store text-green-500 text-2xl"></i>
                         </div>
                     </div>
-                    <div class="bg-white rounded-xl p-6 border">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">Clientes</p>
-                                <p class="text-2xl font-bold text-gray-800" id="total-customers-stat">0</p>
+                                <p class="text-gray-500 text-sm">Taxa de Ocupação</p>
+                                <p class="text-3xl font-bold text-gray-800">85%</p>
                             </div>
-                            <i class="fas fa-users text-blue-500 text-2xl"></i>
+                            <i class="fas fa-chart-pie text-orange-500 text-2xl"></i>
                         </div>
                     </div>
                 </div>
 
+                <!-- Gráficos com container adequado para z-index -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white rounded-xl p-6 border">
-                        <h3 class="text-lg font-semibold mb-4">Reservas por Mês</h3>
-                        <canvas id="reservationsChart" height="200"></canvas>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Reservas por Mês</h3>
+                        <div class="chart-container h-64">
+                            <canvas id="reservationsChart"></canvas>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-xl p-6 border">
-                        <h3 class="text-lg font-semibold mb-4">Restaurantes Mais Populares</h3>
-                        <canvas id="restaurantsChart" height="200"></canvas>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Restaurantes Mais Populares</h3>
+                        <div class="chart-container h-64">
+                            <canvas id="restaurantsChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl p-6 border">
-                    <h3 class="text-lg font-semibold mb-4">Reservas Recentes</h3>
-                    <div id="recent-reservations" class="space-y-4">
-                        <!-- Recent reservations will be populated here -->
+                <!-- Recent Reservations -->
+                <div class="bg-white rounded-xl shadow-sm">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-800">Reservas Recentes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Restaurante</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horário</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-reservations" class="divide-y divide-gray-200">
+                                <!-- Reservas serão inseridas aqui -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -357,16 +401,16 @@
             <div id="restaurants-page" class="page hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h3 class="text-xl font-semibold">Gerenciar Restaurantes</h3>
-                        <p class="text-gray-500">Adicione e gerencie restaurantes do sistema</p>
+                        <h3 class="text-xl font-semibold text-gray-800">Gerenciar Restaurantes</h3>
+                        <p class="text-gray-500">Adicione e gerencie os restaurantes do sistema</p>
                     </div>
-                    <button onclick="showAddRestaurantModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Adicionar Restaurante
+                    <button onclick="openRestaurantModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Novo Restaurante
                     </button>
                 </div>
 
                 <div id="restaurants-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Restaurants will be populated here -->
+                    <!-- Restaurantes serão inseridos aqui -->
                 </div>
             </div>
 
@@ -374,43 +418,61 @@
             <div id="reservations-page" class="page hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h3 class="text-xl font-semibold">Gerenciar Reservas</h3>
+                        <h3 class="text-xl font-semibold text-gray-800">Gerenciar Reservas</h3>
                         <p class="text-gray-500">Visualize e gerencie todas as reservas</p>
                     </div>
-                    <button onclick="showAddReservationModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                    <button onclick="openReservationModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
                         <i class="fas fa-plus mr-2"></i>Nova Reserva
                     </button>
                 </div>
 
-                <div class="bg-white rounded-xl border overflow-hidden">
-                    <div class="p-4 border-b bg-gray-50">
-                        <div class="flex flex-wrap gap-4">
-                            <select id="filter-restaurant" class="border rounded-lg px-3 py-2">
-                                <option value="">Todos os Restaurantes</option>
+                <!-- Filters -->
+                <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Restaurante</label>
+                            <select id="filter-restaurant" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Todos os restaurantes</option>
                             </select>
-                            <select id="filter-status" class="border rounded-lg px-3 py-2">
-                                <option value="">Todos os Status</option>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="filter-status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Todos os status</option>
                                 <option value="confirmada">Confirmada</option>
-                                <option value="cancelada">Cancelada</option>
                                 <option value="pendente">Pendente</option>
+                                <option value="cancelada">Cancelada</option>
                             </select>
-                            <input type="date" id="filter-date" class="border rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                            <input type="date" id="filter-date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="clearFilters()" class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                                Limpar Filtros
+                            </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Reservations Table -->
+                <div class="bg-white rounded-xl shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restaurante</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data/Hora</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pessoas</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Restaurante</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horário</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pessoas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="reservations-table" class="bg-white divide-y divide-gray-200">
-                                <!-- Reservations will be populated here -->
+                            <tbody id="reservations-table" class="divide-y divide-gray-200">
+                                <!-- Reservas serão inseridas aqui -->
                             </tbody>
                         </table>
                     </div>
@@ -421,46 +483,42 @@
             <div id="calendar-page" class="page hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h3 class="text-xl font-semibold">Calendário de Reservas</h3>
-                        <p class="text-gray-500">Visualize reservas em formato de calendário</p>
+                        <h3 class="text-xl font-semibold text-gray-800">Calendário de Reservas</h3>
+                        <p class="text-gray-500">Visualize as reservas em formato de calendário</p>
                     </div>
-                    <div class="flex space-x-2">
-                        <button onclick="previousMonth()" class="p-2 border rounded-lg hover:bg-gray-50">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button onclick="nextMonth()" class="p-2 border rounded-lg hover:bg-gray-50">
-                            <i class="fas fa-chevron-right"></i>
+                    <div class="flex items-center space-x-4">
+                        <select id="calendar-restaurant-filter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="">Todos os restaurantes</option>
+                        </select>
+                        <button onclick="openReservationModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Nova Reserva
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl border p-6">
+                <div class="bg-white rounded-xl p-6 shadow-sm">
                     <div class="flex justify-between items-center mb-6">
-                        <h4 id="calendar-month-year" class="text-lg font-semibold"></h4>
-                        <select id="calendar-restaurant-filter" class="border rounded-lg px-3 py-2">
-                            <option value="">Todos os Restaurantes</option>
-                        </select>
+                        <button onclick="previousMonth()" class="p-2 rounded-lg hover:bg-gray-100">
+                            <i class="fas fa-chevron-left text-gray-600"></i>
+                        </button>
+                        <h4 id="calendar-month-year" class="text-xl font-semibold text-gray-800"></h4>
+                        <button onclick="nextMonth()" class="p-2 rounded-lg hover:bg-gray-100">
+                            <i class="fas fa-chevron-right text-gray-600"></i>
+                        </button>
                     </div>
 
                     <div class="calendar-grid mb-4">
-                        <div class="text-center py-2 font-medium text-gray-500">Dom</div>
-                        <div class="text-center py-2 font-medium text-gray-500">Seg</div>
-                        <div class="text-center py-2 font-medium text-gray-500">Ter</div>
-                        <div class="text-center py-2 font-medium text-gray-500">Qua</div>
-                        <div class="text-center py-2 font-medium text-gray-500">Qui</div>
-                        <div class="text-center py-2 font-medium text-gray-500">Sex</div>
-                        <div class="text-center py-2 font-medium text-gray-500">Sáb</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Dom</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Seg</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Ter</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Qua</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Qui</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Sex</div>
+                        <div class="text-center text-sm font-medium text-gray-500 py-2">Sáb</div>
                     </div>
 
                     <div id="calendar-days" class="calendar-grid">
-                        <!-- Calendar days will be populated here -->
-                    </div>
-
-                    <div id="day-reservations" class="mt-6 hidden">
-                        <h5 class="font-semibold mb-3">Reservas do dia <span id="selected-date"></span></h5>
-                        <div id="day-reservations-list" class="space-y-2">
-                            <!-- Day reservations will be populated here -->
-                        </div>
+                        <!-- Dias do calendário serão inseridos aqui -->
                     </div>
                 </div>
             </div>
@@ -468,35 +526,56 @@
             <!-- Analytics Page -->
             <div id="analytics-page" class="page hidden">
                 <div class="mb-6">
-                    <h3 class="text-xl font-semibold">Relatórios e Análises</h3>
-                    <p class="text-gray-500">Insights detalhados sobre o desempenho</p>
+                    <h3 class="text-xl font-semibold text-gray-800">Relatórios e Análises</h3>
+                    <p class="text-gray-500">Visualize métricas detalhadas do seu negócio</p>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white rounded-xl p-6 border">
-                        <h4 class="text-lg font-semibold mb-4">Taxa de Ocupação</h4>
-                        <canvas id="occupancyChart" height="200"></canvas>
+                <!-- Gráficos de analytics com container adequado -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Taxa de Ocupação por Dia da Semana</h4>
+                        <div class="chart-container h-64">
+                            <canvas id="occupancyChart"></canvas>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-xl p-6 border">
-                        <h4 class="text-lg font-semibold mb-4">Horários Mais Populares</h4>
-                        <canvas id="timesChart" height="200"></canvas>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Horários Mais Populares</h4>
+                        <div class="chart-container h-64">
+                            <canvas id="timesChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl p-6 border">
-                    <h4 class="text-lg font-semibold mb-4">Relatório Detalhado</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-purple-600" id="avg-reservations">0</div>
-                            <div class="text-gray-500">Média de Reservas/Dia</div>
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Receita Estimada</p>
+                                <p class="text-2xl font-bold text-gray-800">R$ 45.230</p>
+                                <p class="text-green-500 text-sm">+12% este mês</p>
+                            </div>
+                            <i class="fas fa-dollar-sign text-green-500 text-2xl"></i>
                         </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-green-600" id="busiest-day">-</div>
-                            <div class="text-gray-500">Dia Mais Movimentado</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Clientes Únicos</p>
+                                <p class="text-2xl font-bold text-gray-800">1.234</p>
+                                <p class="text-blue-500 text-sm">+8% este mês</p>
+                            </div>
+                            <i class="fas fa-users text-blue-500 text-2xl"></i>
                         </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-blue-600" id="peak-time">-</div>
-                            <div class="text-gray-500">Horário de Pico</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Avaliação Média</p>
+                                <p class="text-2xl font-bold text-gray-800">4.8</p>
+                                <p class="text-yellow-500 text-sm">★★★★★</p>
+                            </div>
+                            <i class="fas fa-star text-yellow-500 text-2xl"></i>
                         </div>
                     </div>
                 </div>
@@ -506,28 +585,28 @@
             <div id="customers-page" class="page hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h3 class="text-xl font-semibold">Clientes</h3>
-                        <p class="text-gray-500">Gerencie informações dos clientes</p>
+                        <h3 class="text-xl font-semibold text-gray-800">Gerenciar Clientes</h3>
+                        <p class="text-gray-500">Visualize e gerencie informações dos clientes</p>
                     </div>
-                    <button onclick="exportCustomers()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fas fa-download mr-2"></i>Exportar
+                    <button onclick="openCustomerModal()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Novo Cliente
                     </button>
                 </div>
 
-                <div class="bg-white rounded-xl border overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefone</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Reservas</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última Reserva</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reservas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="customers-table" class="bg-white divide-y divide-gray-200">
-                                <!-- Customers will be populated here -->
+                            <tbody id="customers-table" class="divide-y divide-gray-200">
+                                <!-- Clientes serão inseridos aqui -->
                             </tbody>
                         </table>
                     </div>
@@ -536,131 +615,139 @@
         </main>
     </div>
 
-    <!-- Floating Action Button -->
-    <div class="floating-action">
-        <button onclick="showAddReservationModal()" class="w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-all hover:scale-110">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-
-    <!-- Add Restaurant Modal -->
-    <div id="add-restaurant-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <!-- Modals -->
+    <!-- Restaurant Modal -->
+    <div id="restaurant-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-xl max-w-md w-full p-6">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold">Adicionar Restaurante</h3>
-                <button onclick="closeAddRestaurantModal()" class="text-gray-400 hover:text-gray-600">
+                <h3 class="text-lg font-semibold text-gray-800">Novo Restaurante</h3>
+                <button onclick="closeRestaurantModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="add-restaurant-form" onsubmit="addRestaurant(event)">
+            <form id="restaurant-form">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Restaurante</label>
-                        <input type="text" id="restaurant-name" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Restaurante</label>
+                        <input type="text" id="restaurant-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-                        <input type="text" id="restaurant-address" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                        <input type="text" id="restaurant-address" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                        <input type="tel" id="restaurant-phone" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <input type="tel" id="restaurant-phone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                        <textarea id="restaurant-description" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Capacidade</label>
+                        <input type="number" id="restaurant-capacity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Capacidade</label>
-                        <input type="number" id="restaurant-capacity" min="1" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                        <textarea id="restaurant-description" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" rows="3"></textarea>
                     </div>
                 </div>
-                <div class="flex space-x-3 mt-6">
-                    <button type="submit" class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                        Adicionar
-                    </button>
-                    <button type="button" onclick="closeAddRestaurantModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors">
-                        Cancelar
-                    </button>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeRestaurantModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Add Reservation Modal -->
-    <div id="add-reservation-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-lg w-full p-6">
+    <!-- Reservation Modal -->
+    <div id="reservation-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold">Nova Reserva</h3>
-                <button onclick="closeAddReservationModal()" class="text-gray-400 hover:text-gray-600">
+                <h3 class="text-lg font-semibold text-gray-800">Nova Reserva</h3>
+                <button onclick="closeReservationModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="add-reservation-form" onsubmit="addReservation(event)">
+            <form id="reservation-form">
                 <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente</label>
-                            <input type="text" id="client-name" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" id="client-email" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Cliente</label>
+                        <input type="text" id="customer-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                        <input type="tel" id="client-phone" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="customer-email" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Restaurante</label>
-                        <select id="reservation-restaurant" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <input type="tel" id="customer-phone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Restaurante</label>
+                        <select id="reservation-restaurant" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                             <option value="">Selecione um restaurante</option>
                         </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                            <input type="date" id="reservation-date" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Número de Pessoas</label>
-                            <select id="people-count" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                                <option value="">Selecione</option>
-                                <option value="1">1 pessoa</option>
-                                <option value="2">2 pessoas</option>
-                                <option value="3">3 pessoas</option>
-                                <option value="4">4 pessoas</option>
-                                <option value="5">5 pessoas</option>
-                                <option value="6">6 pessoas</option>
-                                <option value="7">7 pessoas</option>
-                                <option value="8">8+ pessoas</option>
-                            </select>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
+                        <input type="date" id="reservation-date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Horário</label>
+                        <div id="time-slots" class="grid grid-cols-2 gap-2">
+                            <!-- Time slots serão inseridos aqui -->
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Horário</label>
-                        <div id="time-slots" class="grid grid-cols-3 gap-2">
-                            <!-- Time slots will be populated here -->
-                        </div>
-                        <input type="hidden" id="selected-time" required>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Número de Pessoas</label>
+                        <input type="number" id="party-size" min="1" max="20" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
-                        <textarea id="reservation-notes" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                        <textarea id="reservation-notes" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" rows="3"></textarea>
                     </div>
                 </div>
-                <div class="flex space-x-3 mt-6">
-                    <button type="submit" class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                        Confirmar Reserva
-                    </button>
-                    <button type="button" onclick="closeAddReservationModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors">
-                        Cancelar
-                    </button>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeReservationModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">Confirmar Reserva</button>
                 </div>
             </form>
         </div>
     </div>
+
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Novo Cliente</h3>
+                <button onclick="closeCustomerModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="customer-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
+                        <input type="text" id="new-customer-name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="new-customer-email" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <input type="tel" id="new-customer-phone" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">Salvar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button onclick="openReservationModal()" class="floating-action bg-purple-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center">
+        <i class="fas fa-plus text-xl"></i>
+    </button>
 
     <script>
         // Data Storage
@@ -731,7 +818,6 @@
         }
 
         function setupEventListeners() {
-            // SIDEBAR TOGGLE
             document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
             document.getElementById('mobile-overlay').addEventListener('click', closeSidebar);
 
@@ -748,249 +834,278 @@
 
         function generateSampleData() {
             // GERA DADOS DE AMOSTRA PARA TESTE
-            const sampleReservations = [
-                {
-                    clientName: "João Silva",
-                    clientEmail: "joao@email.com",
-                    clientPhone: "(11) 99999-1111",
-                    restaurantId: 1,
-                    date: new Date().toISOString().split('T')[0],
-                    time: "19:00",
-                    people: 2,
-                    status: "confirmada",
-                    notes: "Mesa próxima à janela"
-                },
-                {
-                    clientName: "Maria Santos",
-                    clientEmail: "maria@email.com",
-                    clientPhone: "(11) 99999-2222",
-                    restaurantId: 2,
-                    date: new Date().toISOString().split('T')[0],
-                    time: "20:00",
-                    people: 4,
-                    status: "confirmada",
-                    notes: "Aniversário"
-                }
+            const sampleCustomers = [
+                { name: "João Silva", email: "joao@email.com", phone: "(11) 99999-1111" },
+                { name: "Maria Santos", email: "maria@email.com", phone: "(11) 99999-2222" },
+                { name: "Pedro Oliveira", email: "pedro@email.com", phone: "(11) 99999-3333" }
             ];
 
-            sampleReservations.forEach(reservation => {
-                addReservationToSystem(reservation);
+            sampleCustomers.forEach(customer => {
+                customers.push({
+                    id: nextCustomerId++,
+                    ...customer
+                });
             });
+
+            // GERAR RESERVAS DE AMOSTRA
+            const today = new Date();
+            for (let i = 0; i < 10; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + Math.floor(Math.random() * 30));
+                
+                reservations.push({
+                    id: nextReservationId++,
+                    customerId: customers[Math.floor(Math.random() * customers.length)].id,
+                    restaurantId: restaurants[Math.floor(Math.random() * restaurants.length)].id,
+                    date: date.toISOString().split('T')[0],
+                    time: timeSlots[Math.floor(Math.random() * timeSlots.length)],
+                    partySize: Math.floor(Math.random() * 8) + 1,
+                    status: ['confirmada', 'pendente', 'cancelada'][Math.floor(Math.random() * 3)],
+                    notes: 'Reserva de exemplo'
+                });
+            }
+
+            updateStats();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('hidden');
+                overlay.classList.toggle('active');
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                overlay.classList.remove('active');
+            }
         }
 
         // NAVEGAÇÃO ENTRE PÁGINAS
-        function showPage(page) {
-            // ESCONDE TODOS OS ELEMENTOS DE PÁGINA
-            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-            
-            // REMOVE HIGHLIGHT FROM ALL NAV ITEMS
+        function showPage(pageId) {
+            // ESCONDER TODAS AS PÁGINAS
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+
+            // MOSTRAR PÁGINA SELECIONADA
+            document.getElementById(pageId + '-page').classList.remove('hidden');
+
+            // ATUALIZAR TÍTULO
+            const titles = {
+                'dashboard': { title: 'Dashboard', subtitle: 'Visão geral do sistema' },
+                'restaurants': { title: 'Restaurantes', subtitle: 'Gerencie os restaurantes' },
+                'reservations': { title: 'Reservas', subtitle: 'Gerencie as reservas' },
+                'calendar': { title: 'Calendário', subtitle: 'Visualize as reservas' },
+                'analytics': { title: 'Relatórios', subtitle: 'Análises e métricas' },
+                'customers': { title: 'Clientes', subtitle: 'Gerencie os clientes' }
+            };
+
+            document.getElementById('page-title').textContent = titles[pageId].title;
+            document.getElementById('page-subtitle').textContent = titles[pageId].subtitle;
+
+            // ATUALIZAR NAVEGAÇÃO ATIVA
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('bg-purple-100', 'text-purple-700');
             });
 
-            // SELECIONA A PÁGINA
-            document.getElementById(`${page}-page`).classList.remove('hidden');
-            
-            // ATUALIZA TÍTULO E SUBTÍTULO
-            const titles = {
-                'dashboard': { title: 'Dashboard', subtitle: 'Visão geral do sistema' },
-                'restaurants': { title: 'Restaurantes', subtitle: 'Gerencie restaurantes do sistema' },
-                'reservations': { title: 'Reservas', subtitle: 'Visualize e gerencie reservas' },
-                'calendar': { title: 'Calendário', subtitle: 'Visualize reservas em calendário' },
-                'analytics': { title: 'Relatórios', subtitle: 'Insights e análises detalhadas' },
-                'customers': { title: 'Clientes', subtitle: 'Gerencie informações dos clientes' }
-            };
-
-            if (titles[page]) {
-                document.getElementById('page-title').textContent = titles[page].title;
-                document.getElementById('page-subtitle').textContent = titles[page].subtitle;
-            }
-
-            // NAVEGATION HIGHLIGHT
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach((item, index) => {
-                const pages = ['dashboard', 'restaurants', 'reservations', 'calendar', 'analytics', 'customers'];
-                if (pages[index] === page) {
-                    item.classList.add('bg-purple-100', 'text-purple-700');
-                }
-            });
-
-            // LOAD PAGE
-            switch(page) {
+            // CARREGAR CONTEÚDO DA PÁGINA
+            switch(pageId) {
                 case 'dashboard':
-                    loadDashboard();
+                    updateStats();
+                    renderRecentReservations();
+                    setTimeout(createCharts, 100);
                     break;
                 case 'restaurants':
                     renderRestaurants();
                     break;
                 case 'reservations':
                     renderReservations();
-                    populateFilterRestaurants();
+                    populateRestaurantFilters();
                     break;
                 case 'calendar':
                     renderCalendar();
-                    populateCalendarRestaurants();
+                    populateCalendarFilters();
                     break;
                 case 'analytics':
-                    loadAnalytics();
+                    setTimeout(createAnalyticsCharts, 100);
                     break;
                 case 'customers':
                     renderCustomers();
                     break;
             }
 
-            // FECHA SIDEBAR EM TELAS MENORES
+            // FECHAR SIDEBAR NO MOBILE
             if (window.innerWidth < 768) {
                 closeSidebar();
             }
         }
 
-        // FUNÇÕES DO SIDEBAR
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            
-            if (sidebar.classList.contains('hidden')) {
-                sidebar.classList.remove('hidden');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('hidden');
-                overlay.classList.add('hidden');
-            }
-        }
-
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.add('hidden');
-            document.getElementById('mobile-overlay').classList.add('hidden');
-        }
-
-        // FUNÇÕES DO DASHBOARD
-        function loadDashboard() {
-            updateStats();
-            renderRecentReservations();
-            createCharts();
-        }
-
-        function updateStats() {
-            document.getElementById('total-restaurants-stat').textContent = restaurants.length;
-            
-            const today = new Date().toISOString().split('T')[0];
-            const todayReservations = reservations.filter(r => r.date === today && r.status === 'confirmada').length;
-            document.getElementById('today-reservations-stat').textContent = todayReservations;
-            
-            document.getElementById('total-reservations-stat').textContent = reservations.length;
-            document.getElementById('total-customers-stat').textContent = customers.length;
-        }
-
-        function renderRecentReservations() {
-            const container = document.getElementById('recent-reservations');
-            const recent = reservations.slice(-5).reverse();
-            
-            if (recent.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma reserva encontrada</p>';
-                return;
-            }
-
-            container.innerHTML = recent.map(reservation => {
-                const restaurant = restaurants.find(r => r.id === reservation.restaurantId);
-                const statusColors = {
-                    'confirmada': 'bg-green-100 text-green-800',
-                    'cancelada': 'bg-red-100 text-red-800',
-                    'pendente': 'bg-yellow-100 text-yellow-800'
-                };
-
-                return `
-                    <div class="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                            <h4 class="font-medium">${reservation.clientName}</h4>
-                            <p class="text-sm text-gray-500">${restaurant ? restaurant.name : 'Restaurante não encontrado'}</p>
-                            <p class="text-sm text-gray-500">${formatDate(reservation.date)} às ${reservation.time}</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="px-2 py-1 rounded-full text-xs ${statusColors[reservation.status] || 'bg-gray-100 text-gray-800'}">
-                                ${reservation.status}
-                            </span>
-                            <p class="text-sm text-gray-500 mt-1">${reservation.people} pessoas</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
         function createCharts() {
-            // RESERVAS POR MÊS E RESTAURANTES MAIS POPULARES
-            const ctx1 = document.getElementById('reservationsChart').getContext('2d');
-            new Chart(ctx1, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-                    datasets: [{
-                        label: 'Reservas',
-                        data: [12, 19, 15, 25, 22, 30],
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+            try {
+                // RESERVAS POR MÊS E RESTAURANTES MAIS POPULARES
+                const ctx1 = document.getElementById('reservationsChart');
+                if (ctx1) {
+                    // Destruir gráfico existente se houver
+                    if (window.reservationsChartInstance) {
+                        window.reservationsChartInstance.destroy();
                     }
-                }
-            });
-
-            // RESERVAS POR RESTAURANTE
-            const ctx2 = document.getElementById('restaurantsChart').getContext('2d');
-            const restaurantData = restaurants.map(restaurant => {
-                const count = reservations.filter(r => r.restaurantId === restaurant.id).length;
-                return { name: restaurant.name, count };
-            });
-
-            new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: restaurantData.map(r => r.name),
-                    datasets: [{
-                        data: restaurantData.map(r => r.count),
-                        backgroundColor: ['#4f46e5', '#059669', '#dc2626', '#f59e0b']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
+                    
+                    window.reservationsChartInstance = new Chart(ctx1.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                            datasets: [{
+                                label: 'Reservas',
+                                data: [12, 19, 15, 25, 22, 30],
+                                borderColor: '#4f46e5',
+                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
                         }
-                    }
+                    });
                 }
-            });
+
+                // RESERVAS POR RESTAURANTE
+                const ctx2 = document.getElementById('restaurantsChart');
+                if (ctx2) {
+                    // Destruir gráfico existente se houver
+                    if (window.restaurantsChartInstance) {
+                        window.restaurantsChartInstance.destroy();
+                    }
+                    
+                    const restaurantData = restaurants.map(restaurant => {
+                        const count = reservations.filter(r => r.restaurantId === restaurant.id).length;
+                        return { name: restaurant.name, count };
+                    });
+
+                    window.restaurantsChartInstance = new Chart(ctx2.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: restaurantData.map(r => r.name),
+                            datasets: [{
+                                data: restaurantData.map(r => r.count),
+                                backgroundColor: ['#4f46e5', '#059669', '#dc2626', '#f59e0b']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao criar gráficos:', error);
+            }
         }
+
+        function createAnalyticsCharts() {
+            try {
+                // OCUPAÇÃO POR DIA DA SEMANA
+                const ctx1 = document.getElementById('occupancyChart');
+                if (ctx1) {
+                    // Destruir gráfico existente se houver
+                    if (window.occupancyChartInstance) {
+                        window.occupancyChartInstance.destroy();
+                    }
+                    
+                    window.occupancyChartInstance = new Chart(ctx1.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                            datasets: [{
+                                label: 'Taxa de Ocupação (%)',
+                                data: [65, 80, 75, 85, 90, 95, 70],
+                                backgroundColor: '#4f46e5'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // TEMPO POPULAR DE RESERVAS
+                const ctx2 = document.getElementById('timesChart');
+                if (ctx2) {
+                    // Destruir gráfico existente se houver
+                    if (window.timesChartInstance) {
+                        window.timesChartInstance.destroy();
+                    }
+                    
+                    window.timesChartInstance = new Chart(ctx2.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['11:00', '12:00', '13:00', '18:00', '19:00', '20:00', '21:00'],
+                            datasets: [{
+                                label: 'Reservas',
+                                data: [5, 15, 20, 25, 35, 30, 15],
+                                borderColor: '#059669',
+                                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao criar gráficos de analytics:', error);
+            }
+        }
+
 
         // FUNCOES DOS RESTAURANTES
         function renderRestaurants() {
             const grid = document.getElementById('restaurants-grid');
-            grid.innerHTML = '';
+            
+            if (restaurants.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">Nenhum restaurante encontrado</div>';
+                return;
+            }
 
-            restaurants.forEach(restaurant => {
-                const reservationCount = reservations.filter(r => r.restaurantId === restaurant.id).length;
-                
-                const card = document.createElement('div');
-                card.className = 'restaurant-card bg-white rounded-xl p-6 fade-in';
-                card.innerHTML = `
-                    <img src="${restaurant.image}" alt="Interior elegante do restaurante ${restaurant.name} com decoração moderna e ambiente aconchegante" class="w-full h-40 object-cover rounded-lg mb-4">
-                    <h3 class="text-lg font-semibold mb-2">${restaurant.name}</h3>
-                    <p class="text-gray-600 text-sm mb-2">${restaurant.description}</p>
-                    <p class="text-gray-500 text-sm mb-1"><i class="fas fa-map-marker-alt mr-1"></i>${restaurant.address}</p>
-                    <p class="text-gray-500 text-sm mb-1"><i class="fas fa-phone mr-1"></i>${restaurant.phone}</p>
-                    <p class="text-gray-500 text-sm mb-4"><i class="fas fa-users mr-1"></i>Capacidade: ${restaurant.capacity} pessoas</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-purple-600 font-medium">${reservationCount} reservas</span>
-                        <div class="space-x-2">
+            grid.innerHTML = restaurants.map(restaurant => `
+                <div class="restaurant-card bg-white rounded-xl p-6 shadow-sm">
+                    <div class="mb-4">
+                        <img src="${restaurant.image}" alt="${restaurant.name}" class="w-full h-48 object-cover rounded-lg">
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">${restaurant.name}</h4>
+                    <p class="text-gray-600 text-sm mb-2">${restaurant.address}</p>
+                    <p class="text-gray-600 text-sm mb-2">${restaurant.phone}</p>
+                    <p class="text-gray-500 text-sm mb-4">${restaurant.description}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500">Capacidade: ${restaurant.capacity} pessoas</span>
+                        <div class="flex space-x-2">
                             <button onclick="editRestaurant(${restaurant.id})" class="text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -999,39 +1114,36 @@
                             </button>
                         </div>
                     </div>
-                `;
-                grid.appendChild(card);
-            });
+                </div>
+            `).join('');
         }
 
-        function showAddRestaurantModal() {
-            document.getElementById('add-restaurant-modal').classList.remove('hidden');
-        }
-
-        function closeAddRestaurantModal() {
-            document.getElementById('add-restaurant-modal').classList.add('hidden');
-            document.getElementById('add-restaurant-form').reset();
-        }
-
-        function addRestaurant(event) {
-            event.preventDefault();
+        function openRestaurantModal(restaurantId = null) {
+            const modal = document.getElementById('restaurant-modal');
+            const form = document.getElementById('restaurant-form');
             
-            const formData = new FormData(event.target);
-            const restaurant = {
-                id: nextRestaurantId++,
-                name: document.getElementById('restaurant-name').value,
-                address: document.getElementById('restaurant-address').value,
-                phone: document.getElementById('restaurant-phone').value,
-                description: document.getElementById('restaurant-description').value,
-                capacity: parseInt(document.getElementById('restaurant-capacity').value),
-                image: `https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/430633c7-f5f2-48cc-b2c6-ac613e5aaa28.png'restaurant-name').value)}`
-            };
+            if (restaurantId) {
+                const restaurant = restaurants.find(r => r.id === restaurantId);
+                document.getElementById('restaurant-name').value = restaurant.name;
+                document.getElementById('restaurant-address').value = restaurant.address;
+                document.getElementById('restaurant-phone').value = restaurant.phone;
+                document.getElementById('restaurant-capacity').value = restaurant.capacity;
+                document.getElementById('restaurant-description').value = restaurant.description;
+                form.dataset.editId = restaurantId;
+            } else {
+                form.reset();
+                delete form.dataset.editId;
+            }
+            
+            modal.classList.remove('hidden');
+        }
 
-            restaurants.push(restaurant);
-            closeAddRestaurantModal();
-            renderRestaurants();
-            showNotification('Restaurante adicionado com sucesso!', 'success');
-            updateStats();
+        function closeRestaurantModal() {
+            document.getElementById('restaurant-modal').classList.add('hidden');
+        }
+
+        function editRestaurant(id) {
+            openRestaurantModal(id);
         }
 
         function deleteRestaurant(id) {
@@ -1039,56 +1151,47 @@
                 restaurants = restaurants.filter(r => r.id !== id);
                 renderRestaurants();
                 showNotification('Restaurante excluído com sucesso!', 'success');
-                updateStats();
             }
         }
 
         // FUNCOES DAS RESERVAS
         function renderReservations() {
             const tbody = document.getElementById('reservations-table');
-            const filteredReservations = getFilteredReservations();
             
-            if (filteredReservations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Nenhuma reserva encontrada</td></tr>';
+            if (reservations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Nenhuma reserva encontrada</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = filteredReservations.map(reservation => {
+            tbody.innerHTML = reservations.map(reservation => {
+                const customer = customers.find(c => c.id === reservation.customerId);
                 const restaurant = restaurants.find(r => r.id === reservation.restaurantId);
+                
                 const statusColors = {
                     'confirmada': 'bg-green-100 text-green-800',
-                    'cancelada': 'bg-red-100 text-red-800',
-                    'pendente': 'bg-yellow-100 text-yellow-800'
+                    'pendente': 'bg-yellow-100 text-yellow-800',
+                    'cancelada': 'bg-red-100 text-red-800'
                 };
 
                 return `
-                    <tr class="hover:bg-gray-50">
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-900">${customer ? customer.name : 'Cliente não encontrado'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${restaurant ? restaurant.name : 'Restaurante não encontrado'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${formatDate(reservation.date)}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${reservation.time}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${reservation.partySize}</td>
                         <td class="px-6 py-4">
-                            <div>
-                                <div class="font-medium text-gray-900">${reservation.clientName}</div>
-                                <div class="text-gray-500 text-sm">${reservation.clientPhone}</div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-gray-900">${restaurant ? restaurant.name : 'N/A'}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-gray-900">${formatDate(reservation.date)}</div>
-                            <div class="text-gray-500 text-sm">${reservation.time}</div>
-                        </td>
-                        <td class="px-6 py-4 text-gray-900">${reservation.people}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 rounded-full text-xs ${statusColors[reservation.status]}">
-                                ${reservation.status}
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${statusColors[reservation.status]}">
+                                ${reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
                             </span>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 text-sm">
                             <div class="flex space-x-2">
                                 <button onclick="editReservation(${reservation.id})" class="text-blue-600 hover:text-blue-800">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button onclick="cancelReservation(${reservation.id})" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-times"></i>
+                                <button onclick="deleteReservation(${reservation.id})" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </td>
@@ -1097,54 +1200,95 @@
             }).join('');
         }
 
-        function getFilteredReservations() {
-            let filtered = [...reservations];
+        function renderRecentReservations() {
+            const tbody = document.getElementById('recent-reservations');
+            const recentReservations = reservations.slice(-5).reverse();
             
-            const restaurantFilter = document.getElementById('filter-restaurant').value;
-            const statusFilter = document.getElementById('filter-status').value;
-            const dateFilter = document.getElementById('filter-date').value;
-
-            if (restaurantFilter) {
-                filtered = filtered.filter(r => r.restaurantId == restaurantFilter);
-            }
-            
-            if (statusFilter) {
-                filtered = filtered.filter(r => r.status === statusFilter);
-            }
-            
-            if (dateFilter) {
-                filtered = filtered.filter(r => r.date === dateFilter);
+            if (recentReservations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Nenhuma reserva encontrada</td></tr>';
+                return;
             }
 
-            return filtered.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+            tbody.innerHTML = recentReservations.map(reservation => {
+                const customer = customers.find(c => c.id === reservation.customerId);
+                const restaurant = restaurants.find(r => r.id === reservation.restaurantId);
+                
+                const statusColors = {
+                    'confirmada': 'bg-green-100 text-green-800',
+                    'pendente': 'bg-yellow-100 text-yellow-800',
+                    'cancelada': 'bg-red-100 text-red-800'
+                };
+
+                return `
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-900">${customer ? customer.name : 'Cliente não encontrado'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${restaurant ? restaurant.name : 'Restaurante não encontrado'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${formatDate(reservation.date)}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${reservation.time}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${statusColors[reservation.status]}">
+                                ${reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        function filterReservations() {
-            renderReservations();
-        }
-
-        function populateFilterRestaurants() {
-            const select = document.getElementById('filter-restaurant');
-            select.innerHTML = '<option value="">Todos os Restaurantes</option>' +
+        function openReservationModal(reservationId = null) {
+            const modal = document.getElementById('reservation-modal');
+            const form = document.getElementById('reservation-form');
+            
+            // POPULAR RESTAURANTES
+            const restaurantSelect = document.getElementById('reservation-restaurant');
+            restaurantSelect.innerHTML = '<option value="">Selecione um restaurante</option>' +
                 restaurants.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+            
+            if (reservationId) {
+                const reservation = reservations.find(r => r.id === reservationId);
+                const customer = customers.find(c => c.id === reservation.customerId);
+                
+                document.getElementById('customer-name').value = customer.name;
+                document.getElementById('customer-email').value = customer.email;
+                document.getElementById('customer-phone').value = customer.phone;
+                document.getElementById('reservation-restaurant').value = reservation.restaurantId;
+                document.getElementById('reservation-date').value = reservation.date;
+                document.getElementById('party-size').value = reservation.partySize;
+                document.getElementById('reservation-notes').value = reservation.notes;
+                
+                form.dataset.editId = reservationId;
+                generateTimeSlots();
+                
+                setTimeout(() => {
+                    const timeSlot = document.querySelector(`[data-time="${reservation.time}"]`);
+                    if (timeSlot) {
+                        timeSlot.click();
+                    }
+                }, 100);
+            } else {
+                form.reset();
+                delete form.dataset.editId;
+                generateTimeSlots();
+            }
+            
+            modal.classList.remove('hidden');
         }
 
-        function showAddReservationModal() {
-            document.getElementById('add-reservation-modal').classList.remove('hidden');
-            populateReservationRestaurants();
-            generateTimeSlots();
+        function closeReservationModal() {
+            document.getElementById('reservation-modal').classList.add('hidden');
         }
 
-        function closeAddReservationModal() {
-            document.getElementById('add-reservation-modal').classList.add('hidden');
-            document.getElementById('add-reservation-form').reset();
-            document.getElementById('selected-time').value = '';
+        function editReservation(id) {
+            openReservationModal(id);
         }
 
-        function populateReservationRestaurants() {
-            const select = document.getElementById('reservation-restaurant');
-            select.innerHTML = '<option value="">Selecione um restaurante</option>' +
-                restaurants.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+        function deleteReservation(id) {
+            if (confirm('Tem certeza que deseja excluir esta reserva?')) {
+                reservations = reservations.filter(r => r.id !== id);
+                renderReservations();
+                updateStats();
+                showNotification('Reserva excluída com sucesso!', 'success');
+            }
         }
 
         function generateTimeSlots() {
@@ -1153,199 +1297,86 @@
             const selectedRestaurant = document.getElementById('reservation-restaurant').value;
             
             if (!selectedDate || !selectedRestaurant) {
-                container.innerHTML = '<p class="text-gray-500 text-sm col-span-3">Selecione data e restaurante primeiro</p>';
+                container.innerHTML = '<p class="text-gray-500 text-sm col-span-2">Selecione um restaurante e data primeiro</p>';
                 return;
             }
 
-            container.innerHTML = timeSlots.map(time => {
-                const isUnavailable = reservations.some(r => 
-                    r.date === selectedDate && 
-                    r.time === time && 
-                    r.restaurantId == selectedRestaurant &&
-                    r.status === 'confirmada'
-                );
+            // VERIFICAR HORÁRIOS OCUPADOS
+            const occupiedTimes = reservations
+                .filter(r => r.date === selectedDate && r.restaurantId == selectedRestaurant && r.status !== 'cancelada')
+                .map(r => r.time);
 
+            container.innerHTML = timeSlots.map(time => {
+                const isOccupied = occupiedTimes.includes(time);
                 return `
-                    <div class="time-slot ${isUnavailable ? 'unavailable' : ''}" 
-                         onclick="${isUnavailable ? '' : 'selectTimeSlot(this, \'' + time + '\')'}"
-                         data-time="${time}">
+                    <div class="time-slot ${isOccupied ? 'unavailable' : ''}" 
+                         data-time="${time}" 
+                         onclick="${isOccupied ? '' : 'selectTimeSlot(this)'}">
                         ${time}
-                        ${isUnavailable ? '<br><small>Ocupado</small>' : ''}
                     </div>
                 `;
             }).join('');
         }
 
-        function selectTimeSlot(element, time) {
-            // REMOVE SELEÇÃO DE TODOS OS SLOTS
+        function selectTimeSlot(element) {
+            // REMOVER SELEÇÃO ANTERIOR
             document.querySelectorAll('.time-slot').forEach(slot => {
                 slot.classList.remove('selected');
             });
             
-            // SELECIONA O SLOT ATUAL
+            // SELECIONAR NOVO HORÁRIO
             element.classList.add('selected');
-            document.getElementById('selected-time').value = time;
         }
 
-        function addReservation(event) {
-            event.preventDefault();
-            
-            const reservation = {
-                clientName: document.getElementById('client-name').value,
-                clientEmail: document.getElementById('client-email').value,
-                clientPhone: document.getElementById('client-phone').value,
-                restaurantId: parseInt(document.getElementById('reservation-restaurant').value),
-                date: document.getElementById('reservation-date').value,
-                time: document.getElementById('selected-time').value,
-                people: parseInt(document.getElementById('people-count').value),
-                status: 'confirmada',
-                notes: document.getElementById('reservation-notes').value
-            };
-
-            if (!reservation.time) {
-                showNotification('Por favor, selecione um horário', 'error');
-                return;
-            }
-
-            addReservationToSystem(reservation);
-            closeAddReservationModal();
-            showNotification('Reserva criada com sucesso!', 'success');
-            
-            // RENDERIZA AS RESERVAS ATUALIZADAS
-            const currentPage = document.querySelector('.page:not(.hidden)').id.replace('-page', '');
-            if (currentPage === 'reservations') {
-                renderReservations();
-            } else if (currentPage === 'dashboard') {
-                loadDashboard();
-            } else if (currentPage === 'calendar') {
-                renderCalendar();
-            }
-        }
-
-        function addReservationToSystem(reservationData) {
-            const reservation = {
-                id: nextReservationId++,
-                ...reservationData
-            };
-
-            reservations.push(reservation);
-
-            // ADICIONA OU ATUALIZA O CLIENTE
-            const existingCustomer = customers.find(c => 
-                c.email === reservation.clientEmail || c.phone === reservation.clientPhone
-            );
-
-            if (!existingCustomer) {
-                customers.push({
-                    id: nextCustomerId++,
-                    name: reservation.clientName,
-                    email: reservation.clientEmail,
-                    phone: reservation.clientPhone,
-                    totalReservations: 1,
-                    lastReservation: reservation.date
-                });
-            } else {
-                existingCustomer.totalReservations++;
-                existingCustomer.lastReservation = reservation.date;
-            }
-
-            updateStats();
-        }
-
-        function cancelReservation(id) {
-            if (confirm('Tem certeza que deseja cancelar esta reserva?')) {
-                const reservation = reservations.find(r => r.id === id);
-                if (reservation) {
-                    reservation.status = 'cancelada';
-                    renderReservations();
-                    showNotification('Reserva cancelada com sucesso!', 'success');
-                    updateStats();
-                }
-            }
-        }
-
-        // FUNÇÕES DO CALENDÁRIO
+        // FUNCOES DO CALENDÁRIO
         function renderCalendar() {
-            const container = document.getElementById('calendar-days');
-            const monthYear = document.getElementById('calendar-month-year');
-            
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            
-            monthYear.textContent = new Date(year, month).toLocaleDateString('pt-BR', { 
-                month: 'long', 
-                year: 'numeric' 
-            });
+            const monthNames = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
 
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
+            document.getElementById('calendar-month-year').textContent = 
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
             const startDate = new Date(firstDay);
             startDate.setDate(startDate.getDate() - firstDay.getDay());
 
-            container.innerHTML = '';
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
 
-            const filterRestaurant = document.getElementById('calendar-restaurant-filter').value;
+            const selectedRestaurant = document.getElementById('calendar-restaurant-filter').value;
 
             for (let i = 0; i < 42; i++) {
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 
-                const isCurrentMonth = date.getMonth() === month;
-                const isToday = date.toDateString() === new Date().toDateString();
                 const dateStr = date.toISOString().split('T')[0];
+                const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+                const isToday = dateStr === new Date().toISOString().split('T')[0];
                 
-                let dayReservations = reservations.filter(r => r.date === dateStr && r.status === 'confirmada');
-                if (filterRestaurant) {
-                    dayReservations = dayReservations.filter(r => r.restaurantId == filterRestaurant);
-                }
-                
+                // VERIFICAR SE TEM RESERVAS
+                const dayReservations = reservations.filter(r => {
+                    const matchesDate = r.date === dateStr;
+                    const matchesRestaurant = !selectedRestaurant || r.restaurantId == selectedRestaurant;
+                    return matchesDate && matchesRestaurant && r.status !== 'cancelada';
+                });
+
                 const hasReservations = dayReservations.length > 0;
 
+                let classes = 'calendar-day';
+                if (!isCurrentMonth) classes += ' text-gray-300';
+                if (isToday) classes += ' today';
+                if (hasReservations) classes += ' has-reservation';
+
                 const dayElement = document.createElement('div');
-                dayElement.className = `calendar-day ${isToday ? 'today' : ''} ${hasReservations ? 'has-reservation' : ''} ${!isCurrentMonth ? 'text-gray-300' : ''}`;
+                dayElement.className = classes;
                 dayElement.textContent = date.getDate();
-                dayElement.onclick = () => showDayReservations(dateStr, dayReservations);
+                dayElement.title = hasReservations ? `${dayReservations.length} reserva(s)` : '';
                 
-                container.appendChild(dayElement);
+                calendarDays.appendChild(dayElement);
             }
-        }
-
-        function showDayReservations(date, dayReservations) {
-            const container = document.getElementById('day-reservations');
-            const dateSpan = document.getElementById('selected-date');
-            const list = document.getElementById('day-reservations-list');
-            
-            dateSpan.textContent = formatDate(date);
-            
-            if (dayReservations.length === 0) {
-                list.innerHTML = '<p class="text-gray-500">Nenhuma reserva neste dia</p>';
-            } else {
-                list.innerHTML = dayReservations.map(reservation => {
-                    const restaurant = restaurants.find(r => r.id === reservation.restaurantId);
-                    return `
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h6 class="font-medium">${reservation.clientName}</h6>
-                                    <p class="text-sm text-gray-600">${restaurant ? restaurant.name : 'N/A'}</p>
-                                    <p class="text-sm text-gray-500">${reservation.time} - ${reservation.people} pessoas</p>
-                                </div>
-                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                    ${reservation.status}
-                                </span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            container.classList.remove('hidden');
-        }
-
-        function populateCalendarRestaurants() {
-            const select = document.getElementById('calendar-restaurant-filter');
-            select.innerHTML = '<option value="">Todos os Restaurantes</option>' +
-                restaurants.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
         }
 
         function previousMonth() {
@@ -1358,90 +1389,7 @@
             renderCalendar();
         }
 
-        // ANALYTICS
-        function loadAnalytics() {
-            calculateAnalytics();
-            createAnalyticsCharts();
-        }
-
-        function calculateAnalytics() {
-            const totalDays = 30; // ULTIMOS 30 DIAS
-            const avgReservations = Math.round(reservations.length / totalDays * 10) / 10;
-            document.getElementById('avg-reservations').textContent = avgReservations;
-
-            // ACHA4 o dia mais movimentado
-            const dayCount = {};
-            reservations.forEach(r => {
-                const day = new Date(r.date).getDay();
-                const dayName = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][day];
-                dayCount[dayName] = (dayCount[dayName] || 0) + 1;
-            });
-            
-            const busiestDay = Object.keys(dayCount).reduce((a, b) => 
-                dayCount[a] > dayCount[b] ? a : b, 'N/A'
-            );
-            document.getElementById('busiest-day').textContent = busiestDay;
-
-            // ACHA o horário mais movimentado
-            const timeCount = {};
-            reservations.forEach(r => {
-                const hour = r.time.split(':')[0];
-                timeCount[hour] = (timeCount[hour] || 0) + 1;
-            });
-            
-            const peakHour = Object.keys(timeCount).reduce((a, b) => 
-                timeCount[a] > timeCount[b] ? a : b, 'N/A'
-            );
-            document.getElementById('peak-time').textContent = peakHour !== 'N/A' ? peakHour + ':00' : 'N/A';
-        }
-
-        function createAnalyticsCharts() {
-            // OCUPAÇÃO POR DIA DA SEMANA
-            const ctx1 = document.getElementById('occupancyChart').getContext('2d');
-            new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
-                    datasets: [{
-                        label: 'Taxa de Ocupação (%)',
-                        data: [65, 80, 75, 85, 90, 95, 70],
-                        backgroundColor: '#4f46e5'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100
-                        }
-                    }
-                }
-            });
-
-            // TEMPO POPULAR DE RESERVAS
-            const ctx2 = document.getElementById('timesChart').getContext('2d');
-            new Chart(ctx2, {
-                type: 'line',
-                data: {
-                    labels: ['11:00', '12:00', '13:00', '18:00', '19:00', '20:00', '21:00'],
-                    datasets: [{
-                        label: 'Reservas',
-                        data: [5, 15, 20, 25, 35, 30, 15],
-                        borderColor: '#059669',
-                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-
-        // FUNÇÕES DOS CLIENTES
+        // FUNCOES DOS CLIENTES
         function renderCustomers() {
             const tbody = document.getElementById('customers-table');
             
@@ -1450,77 +1398,250 @@
                 return;
             }
 
-            tbody.innerHTML = customers.map(customer => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900">${customer.name}</td>
-                    <td class="px-6 py-4 text-gray-900">${customer.email || '-'}</td>
-                    <td class="px-6 py-4 text-gray-900">${customer.phone}</td>
-                    <td class="px-6 py-4 text-gray-900">${customer.totalReservations}</td>
-                    <td class="px-6 py-4 text-gray-900">${formatDate(customer.lastReservation)}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = customers.map(customer => {
+                const customerReservations = reservations.filter(r => r.customerId === customer.id);
+                
+                return `
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-900">${customer.name}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${customer.email}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${customer.phone}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${customerReservations.length}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <div class="flex space-x-2">
+                                <button onclick="editCustomer(${customer.id})" class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteCustomer(${customer.id})" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        function exportCustomers() {
-            const data = customers.map(customer => ({
-                Nome: customer.name,
-                Email: customer.email || '',
-                Telefone: customer.phone,
-                'Total Reservas': customer.totalReservations,
-                'Última Reserva': customer.lastReservation
-            }));
-
-            const csv = convertToCSV(data);
-            downloadCSV(csv, 'clientes.csv');
-            showNotification('Dados exportados com sucesso!', 'success');
+        function openCustomerModal(customerId = null) {
+            const modal = document.getElementById('customer-modal');
+            const form = document.getElementById('customer-form');
+            
+            if (customerId) {
+                const customer = customers.find(c => c.id === customerId);
+                document.getElementById('new-customer-name').value = customer.name;
+                document.getElementById('new-customer-email').value = customer.email;
+                document.getElementById('new-customer-phone').value = customer.phone;
+                form.dataset.editId = customerId;
+            } else {
+                form.reset();
+                delete form.dataset.editId;
+            }
+            
+            modal.classList.remove('hidden');
         }
 
-        // FUNÇÕES GERAIS
+        function closeCustomerModal() {
+            document.getElementById('customer-modal').classList.add('hidden');
+        }
+
+        function editCustomer(id) {
+            openCustomerModal(id);
+        }
+
+        function deleteCustomer(id) {
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                customers = customers.filter(c => c.id !== id);
+                renderCustomers();
+                showNotification('Cliente excluído com sucesso!', 'success');
+            }
+        }
+
+        // FUNCOES DE FILTRO
+        function populateRestaurantFilters() {
+            const filterSelect = document.getElementById('filter-restaurant');
+            filterSelect.innerHTML = '<option value="">Todos os restaurantes</option>' +
+                restaurants.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+        }
+
+        function populateCalendarFilters() {
+            const filterSelect = document.getElementById('calendar-restaurant-filter');
+            filterSelect.innerHTML = '<option value="">Todos os restaurantes</option>' +
+                restaurants.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+        }
+
+        function filterReservations() {
+            const restaurantFilter = document.getElementById('filter-restaurant').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            const dateFilter = document.getElementById('filter-date').value;
+
+            // IMPLEMENTAR LÓGICA DE FILTRO AQUI
+            renderReservations();
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-restaurant').value = '';
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-date').value = new Date().toISOString().split('T')[0];
+            filterReservations();
+        }
+
+        // FUNCOES DE FORMULÁRIO
+        document.getElementById('restaurant-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('restaurant-name').value,
+                address: document.getElementById('restaurant-address').value,
+                phone: document.getElementById('restaurant-phone').value,
+                capacity: parseInt(document.getElementById('restaurant-capacity').value),
+                description: document.getElementById('restaurant-description').value,
+                image: "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/046606eb-1668-44b3-8093-aea075d82187.png"
+            };
+
+            if (this.dataset.editId) {
+                // EDITAR RESTAURANTE
+                const id = parseInt(this.dataset.editId);
+                const index = restaurants.findIndex(r => r.id === id);
+                restaurants[index] = { ...restaurants[index], ...formData };
+                showNotification('Restaurante atualizado com sucesso!', 'success');
+            } else {
+                // NOVO RESTAURANTE
+                restaurants.push({
+                    id: nextRestaurantId++,
+                    ...formData
+                });
+                showNotification('Restaurante adicionado com sucesso!', 'success');
+            }
+
+            closeRestaurantModal();
+            renderRestaurants();
+            updateStats();
+        });
+
+        document.getElementById('reservation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const selectedTimeSlot = document.querySelector('.time-slot.selected');
+            if (!selectedTimeSlot) {
+                showNotification('Selecione um horário para a reserva', 'error');
+                return;
+            }
+
+            // VERIFICAR SE CLIENTE JÁ EXISTE
+            const customerEmail = document.getElementById('customer-email').value;
+            let customer = customers.find(c => c.email === customerEmail);
+            
+            if (!customer) {
+                // CRIAR NOVO CLIENTE
+                customer = {
+                    id: nextCustomerId++,
+                    name: document.getElementById('customer-name').value,
+                    email: customerEmail,
+                    phone: document.getElementById('customer-phone').value
+                };
+                customers.push(customer);
+            }
+
+            const reservationData = {
+                customerId: customer.id,
+                restaurantId: parseInt(document.getElementById('reservation-restaurant').value),
+                date: document.getElementById('reservation-date').value,
+                time: selectedTimeSlot.dataset.time,
+                partySize: parseInt(document.getElementById('party-size').value),
+                status: 'confirmada',
+                notes: document.getElementById('reservation-notes').value
+            };
+
+            if (this.dataset.editId) {
+                // EDITAR RESERVA
+                const id = parseInt(this.dataset.editId);
+                const index = reservations.findIndex(r => r.id === id);
+                reservations[index] = { ...reservations[index], ...reservationData };
+                showNotification('Reserva atualizada com sucesso!', 'success');
+            } else {
+                // NOVA RESERVA
+                reservations.push({
+                    id: nextReservationId++,
+                    ...reservationData
+                });
+                showNotification('Reserva criada com sucesso!', 'success');
+            }
+
+            closeReservationModal();
+            renderReservations();
+            updateStats();
+        });
+
+        document.getElementById('customer-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('new-customer-name').value,
+                email: document.getElementById('new-customer-email').value,
+                phone: document.getElementById('new-customer-phone').value
+            };
+
+            if (this.dataset.editId) {
+                // EDITAR CLIENTE
+                const id = parseInt(this.dataset.editId);
+                const index = customers.findIndex(c => c.id === id);
+                customers[index] = { ...customers[index], ...formData };
+                showNotification('Cliente atualizado com sucesso!', 'success');
+            } else {
+                // NOVO CLIENTE
+                customers.push({
+                    id: nextCustomerId++,
+                    ...formData
+                });
+                showNotification('Cliente adicionado com sucesso!', 'success');
+            }
+
+            closeCustomerModal();
+            renderCustomers();
+        });
+
+        // FUNCOES UTILITÁRIAS
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayReservations = reservations.filter(r => r.date === today && r.status !== 'cancelada');
+            
+            document.getElementById('total-reservations').textContent = reservations.filter(r => r.status !== 'cancelada').length;
+            document.getElementById('today-reservations').textContent = todayReservations.length;
+            document.getElementById('total-restaurants').textContent = restaurants.length;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('pt-BR');
+        }
+
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.className = `notification ${type}`;
             notification.classList.add('show');
-
+            
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
         }
 
-        function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('pt-BR');
-        }
+        // FECHAR MODAIS AO CLICAR FORA
+        window.addEventListener('click', function(e) {
+            const modals = ['restaurant-modal', 'reservation-modal', 'customer-modal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
 
-        function convertToCSV(data) {
-            if (data.length === 0) return '';
-            
-            const headers = Object.keys(data[0]);
-            const csvContent = [
-                headers.join(','),
-                ...data.map(row => headers.map(header => `"${row[header]}"`).join(','))
-            ].join('\n');
-            
-            return csvContent;
-        }
-
-        function downloadCSV(csv, filename) {
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // RESPONSIVE SIDEBAR
+        // RESPONSIVIDADE
         window.addEventListener('resize', function() {
             if (window.innerWidth >= 768) {
                 document.getElementById('sidebar').classList.remove('hidden');
-                document.getElementById('mobile-overlay').classList.add('hidden');
+                document.getElementById('mobile-overlay').classList.remove('active');
             } else {
                 document.getElementById('sidebar').classList.add('hidden');
             }
@@ -1528,4 +1649,3 @@
     </script>
 </body>
 </html>
-
