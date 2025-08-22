@@ -7,7 +7,7 @@ require("dotenv").config()
 const seedData = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/restaurante")
-    console.log("✅ Conectado ao MongoDB")
+    console.log("Conectado ao MongoDB")
 
     // Limpar dados existentes
     await Restaurante.deleteMany({})
@@ -180,12 +180,12 @@ const seedData = async () => {
         precoEstimado: 300.0,
       },
     ])
-    console.log("📅 Reservas criadas")
+    console.log(" Reservas criadas")
 
-    console.log("🎉 Seed concluído com sucesso!")
+    console.log(" Seed concluído com sucesso!")
     process.exit(0)
   } catch (error) {
-    console.error("❌ Erro no seed:", error)
+    console.error(" Erro no seed:", error)
     process.exit(1)
   }
 }
