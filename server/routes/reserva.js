@@ -113,7 +113,7 @@ router.put("/:id", async (req, res) => {
   }
 })
 
-// DELETE /api/reservas/:id p cancelar reserva
+// DELETE /api/reservas/:id - Cancelar reserva
 router.delete("/:id", async (req, res) => {
   try {
     const reserva = await Reserva.findByIdAndUpdate(req.params.id, { status: "cancelada" }, { new: true })
@@ -128,7 +128,7 @@ router.delete("/:id", async (req, res) => {
   }
 })
 
-// GET /api/reservas/disponibilidade/:restauranteId p verificar disponibilidade
+// GET /api/reservas/disponibilidade/:restauranteId - Verificar disponibilidade
 router.get("/disponibilidade/:restauranteId", async (req, res) => {
   try {
     const { data, hora } = req.query
