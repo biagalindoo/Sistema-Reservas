@@ -5,19 +5,23 @@ const auth = require("../middleware/auth")
 
 const router = express.Router()
 
-// Registra
+// Registro
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const { name, email, phone, password } = req.body
 
-    // faz a checagem se o email já está em uso
+    // verificar se o email ou telefone já estão em uso
     const existingUser = await User.findOne({ email })
     if (existingUser) {
       return res.status(400).json({ message: "Email já está em uso" })
     }
 
-    // cria o usuário
-    const user = new User({ name, email, password })
+    const existingPhone = await User.findOne({ phone })
+    if (existingPhone) {
+      return res.status(400).json({ message: "Telefone já está em uso" })
+    }
+
+    const user = new User({ name, email, phone, password })
     await user.save()
 
     res.status(201).json({
@@ -26,6 +30,7 @@ router.post("/register", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
     })
@@ -44,19 +49,19 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body
 
-    // encontra o usuário
+    // Find user
     const user = await User.findOne({ email, isActive: true })
     if (!user) {
       return res.status(401).json({ message: "Email ou senha inválidos" })
     }
 
-    // faz a verificação da senha
+    // verificar senha
     const isMatch = await user.comparePassword(password)
     if (!isMatch) {
       return res.status(401).json({ message: "Email ou senha inválidos" })
     }
 
-    // atualiza o último login
+    // atualizar último login
     user.lastLogin = new Date()
     await user.save()
 
@@ -83,7 +88,7 @@ router.post("/login", async (req, res) => {
   }
 })
 
-// pega os dados do usuário logado
+// pegar dados do usuário logado
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId)
