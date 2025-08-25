@@ -50,6 +50,17 @@
             </div>
 
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                <div class="relative">
+                    <input type="tel" id="phone" required 
+                           placeholder="(11) 99999-9999"
+                           class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <i class="fas fa-phone absolute left-3 top-4 text-gray-400"></i>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Formato: (XX) XXXXX-XXXX</p>
+            </div>
+
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                 <div class="relative">
                     <input type="password" id="password" required 
@@ -133,6 +144,7 @@
             
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const registerText = document.getElementById('register-text');
@@ -141,6 +153,13 @@
             // Validate passwords match
             if (password !== confirmPassword) {
                 showNotification('As senhas não coincidem');
+                return;
+            }
+            
+            // Validate phone format
+            const phoneRegex = /^$$\d{2}$$\s\d{4,5}-\d{4}$/;
+            if (!phoneRegex.test(phone)) {
+                showNotification('Telefone deve estar no formato (XX) XXXXX-XXXX');
                 return;
             }
             
@@ -160,7 +179,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ name, email, phone, password })
                 });
                 
                 const data = await response.json();
@@ -183,6 +202,23 @@
                 registerText.textContent = 'Criar Conta';
                 registerLoading.classList.add('hidden');
             }
+        });
+
+        // Add phone mask
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length >= 11) {
+                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 7) {
+                value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+            } else if (value.length >= 1) {
+                value = value.replace(/(\d{0,2})/, '($1');
+            }
+            
+            e.target.value = value;
         });
 
         // Check if already logged in
