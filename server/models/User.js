@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, "Email inválido"],
     },
+    phone: {
+      type: String,
+      required: [true, "Telefone é obrigatório"],
+      trim: true,
+      match: [/^$$\d{2}$$\s\d{4,5}-\d{4}$/, "Telefone deve estar no formato (XX) XXXXX-XXXX"],
+    },
     password: {
       type: String,
       required: [true, "Senha é obrigatória"],
@@ -40,7 +46,8 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 )
-// Hash da senha antes de salvar
+
+// senha hash antes de salvar
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next()
 
@@ -53,12 +60,12 @@ userSchema.pre("save", async function (next) {
   }
 })
 
-// Compara senhas
+// Compara senha
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password)
 }
 
-// Remove senha
+// Remove senha do objeto retornado
 userSchema.methods.toJSON = function () {
   const user = this.toObject()
   delete user.password
