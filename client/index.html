@@ -97,8 +97,27 @@
                             <i class="fas fa-bell text-gray-600"></i>
                             <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
                         </button>
-                        <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user text-white text-sm"></i>
+                        <!-- Adicionando dropdown do usuário com logout -->
+                        <div class="relative">
+                            <button id="user-dropdown-toggle" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
+                                <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-white text-sm"></i>
+                                </div>
+                                <span id="user-name" class="text-gray-700 font-medium hidden md:block">Usuário</span>
+                                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                            </button>
+                            <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50">
+                                <div class="py-2">
+                                    <div class="px-4 py-2 border-b border-gray-200">
+                                        <p class="text-sm text-gray-500">Logado como</p>
+                                        <p id="user-email" class="text-sm font-medium text-gray-800">admin@exemplo.com</p>
+                                    </div>
+                                    <button onclick="logout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center space-x-2">
+                                        <i class="fas fa-sign-out-alt text-red-500"></i>
+                                        <span>Sair</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
